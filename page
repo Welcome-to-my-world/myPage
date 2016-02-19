@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-type"  content="text/html ;   charset=utf-8">
+</head>
+<style type="text/css">
+    div.page{
+        text-align: center;
+    }
+    div.page a{
+        border: #D2691E 1px solid;text-decoration: none;  padding: 2px 5px 2px 5px;margin: 2px;
+    }
+    div.content{
+        height: 300px;
+    }
+    div.page span.current {
+        border: #000099 1px solid; background-color: #000099; padding: 4px;margin: 2px; color: #fff;
+        font-weight: bold;
+    }
+    div.page span.disable{
+        border: #fff 1px solid; padding: 2px 5px 2px 5px;margin: 2px; color: #ddd;
+    }
+     div form{
+        display: inline;
+     }
+</style>
+<body>
+<?php
+
+    $page=$_GET['p'];
+
+    $host="localhost";
+    $username="root";
+    $password="root";
+    $db="info";
+    $conn=mysql_connect($host,$username,$password);
+    $pageSize=5;
+    $showPage=5;
+    if(!$conn){
+    echo mysql_error();
+    exit;
+    }
+
+
+    mysql_select_db($db);
+    mysql_query('set names utf8');
+
+    $sql="SELECT * FROM article LIMIT " .($page-1)*10 .",5" ;
+    $result=mysql_query($sql);
+
+    echo "<div class='content'>";
+    echo "<table border=1 cellspacing=0 width=40%   align=center>";
+    echo "<tr><td>ID</td><td>num</td></tr>";
+
+    while($row=mysql_fetch_assoc($result)){
+    	echo "<tr>";
+    	echo "<td>{$row['id']}</td>";
+    	echo "<td>{$row['num']}</td>";
+        echo "</tr>";
+
+    }
+    echo "</table>";
+    echo "</div>";
+    mysql_free_result($result);
+
+    $total="SELECT COUNT(*) FROM article";
+    $total_result =mysql_fetch_array(mysql_query($total));
+     $count=$total_result[0];
+    $total_pages=ceil($count/$pageSize);
+    mysql_close($conn);
+    
+
+    $pageOffset=($showPage-1)/2;
+    
+    $start=1;
+    $end=$total_pages;
+    $page_banner="<div class=page>";
+
+
+    
+
+   if($page>1){
+    $page_banner.="<a href='" .$_SERVER['PHP_SELF']."?p=1'>首页</a>";
+      $page_banner.="<a href='" .$_SERVER['PHP_SELF']."?p=".($page-1)."'><上一页</a>";
+}else{
+      $page_banner.="<span class='disable'>首页</a></span>";
+      $page_banner.="<span class='disable'>下一页</a></span>";
+}
+
+    if($total_pages>$showPage){
+            if($page>$pageOffset+1){
+                $page_banner .="...";
+            }
+    if($page>$pageOffset){
+        $start=$page-$pageOffset;
+        $end=$total_pages>$page+$pageOffset?$page+$pageOffset:$total_pages  ;
+    }  else{
+        $start=1;
+        $end=$total_pages>$showPage?$showPage:$total_pages;
+    }   
+    if($page+$pageOffset>$total_pages){
+        $start=$start-($page+$pageOffset-$end);
+
+    }   
+}
+   
+   
+
+    
+
+     for($i=$start;$i<=$end;$i++){
+        if($page==$i){
+        $page_banner.="<span class='current'>{$i}</span>";  
+        }else{
+        $page_banner.="<a href='" .$_SERVER['PHP_SELF']."?p=".$i."'>{$i}</a>"; 
+        }
+    }
+
+
+    if($total_pages>$showPage&&$total_pages>$pageOffset+$page){
+         $page_banner .="...";
+    }
+    
+    
+   if($page<$total_pages){
+   	 $page_banner.="<a href='" .$_SERVER['PHP_SELF']."?p=".($page+1)."'>下一页></a>";
+   	  $page_banner.="<a href='" .$_SERVER['PHP_SELF']."?p=".($total_pages)."'>尾页</a>";
+   }else{
+      $page_banner.="<span class='disable'>下一页</a></span>";
+      $page_banner.="<span class='disable'>尾页</a></span>";
+
+   }
+        
+         $page_banner.="共{$total_pages}页，";
+         $page_banner.=" <form action='m.php' method='get' > ";
+         $page_banner .="<input type='text' size='2' name='p' >";
+         $page_banner .="<input type ='submit' value='确定'>";
+         $page_banner .="</form></div>";
+     echo $page_banner;
+?>
+</body>
+</html>
